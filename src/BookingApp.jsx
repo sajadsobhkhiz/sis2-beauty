@@ -1,8 +1,7 @@
 // ─────────────────────────────────────────────
 //  SiS2 Beauty — Customer Booking
-//  Routes:
-//    /          → choose any staff
-//    /:slug     → book directly with one staff
+//  / → all stylists
+//  /:slug → book with specific stylist
 // ─────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
@@ -12,73 +11,89 @@ import {
   fetchAvailability, fetchTimeOff, fetchAppointments, addAppointment,
 } from "./supabase";
 import {
-  BRAND, T, Ic, Avatar, Card, Button, Input, Textarea, Spinner, Logo,
-  useTheme, GlobalStyles, buildCssVars, getNextDays, getAvailableSlots, PRIMARY_GRADIENT,
+  T, GRAD, LOGO_SRC, BRAND,
+  Avatar, Card, GoldBtn, Input, Textarea, Spinner,
+  GlobalStyles, getNextDays, getAvailableSlots, callEmailServer,
 } from "./shared";
 
-// ═══════════════════════════════════════════════════════════════
-//  ENTRY 1: List all staff
-// ═══════════════════════════════════════════════════════════════
-export function BookingHome() {
-  const [t, dark, setDark] = useTheme();
-  const [staff, setStaff] = useState([]);
-  const [loading, setLoading] = useState(true);
+const G = "#d4af37";
 
-  useEffect(() => {
-    fetchStaff().then(s => setStaff(s.filter(x => x.status === "Active" && x.accepts_bookings))).finally(() => setLoading(false));
-  }, []);
-
+// ── Logo header shared ────────────────────────────────────────
+function SiteHeader({ back }) {
   return (
-    <div style={{ minHeight:"100vh", background:t.bg, color:t.text, paddingBottom:60, ...buildCssVars(t) }}>
-      <GlobalStyles t={t} />
-
-      <Header t={t} dark={dark} setDark={setDark} subtitle="Book your appointment" />
-
-      <div style={{ padding:"40px 20px 0", textAlign:"center" }}>
-        <p style={{ fontSize:11, color:BRAND.gold, fontWeight:600, letterSpacing:3, textTransform:"uppercase", marginBottom:14 }}>
-          Welcome to
-        </p>
-        <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:42, fontWeight:700, color:t.text, lineHeight:1, letterSpacing:.5 }}>
-          <span>SiS</span><span style={{ color:BRAND.gold }}>2</span> <span style={{ fontWeight:500 }}>Beauty</span>
-        </h1>
-        <div style={{ width:60, height:1, background:`linear-gradient(90deg, transparent, ${BRAND.gold}, transparent)`, margin:"20px auto" }} />
-        <p style={{ fontSize:14, color:t.muted, lineHeight:1.6 }}>Choose your stylist to begin</p>
-      </div>
-
-      <div style={{ padding:"30px 20px" }}>
-        {loading ? <div style={{ textAlign:"center", padding:60 }}><Spinner /></div> : (
-          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-            {staff.map(s => (
-              <Link key={s.id} to={`/${s.slug}`} style={{ textDecoration:"none" }}>
-                <Card style={{ padding:"22px 22px", display:"flex", alignItems:"center", gap:16, transition:"all .2s", borderColor:`${BRAND.gold}25` }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = BRAND.gold; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = `${BRAND.gold}25`; }}>
-                  <Avatar name={s.name} photoUrl={s.photo_url} size={64} color={s.color} />
-                  <div style={{ flex:1 }}>
-                    <p style={{ fontSize:18, fontWeight:600, color:t.text, fontFamily:"'Cormorant Garamond',serif", letterSpacing:.3 }}>{s.name}</p>
-                    <p style={{ fontSize:12, color:BRAND.gold, marginTop:3, letterSpacing:1, textTransform:"uppercase", fontWeight:600 }}>{s.role}</p>
-                    {s.bio && <p style={{ fontSize:12, color:t.muted, marginTop:8, lineHeight:1.5 }}>{s.bio}</p>}
-                  </div>
-                  <div style={{ color:BRAND.gold, fontSize:20 }}>→</div>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <Footer t={t} />
+    <div style={{ position:"sticky", top:0, zIndex:100, background:T.bg, borderBottom:`1px solid ${G}20`, padding:"10px 20px", display:"flex", alignItems:"center", gap:10 }}>
+      {back && (
+        <Link to="/" style={{ color:T.muted, fontSize:20, textDecoration:"none", marginRight:4 }}>‹</Link>
+      )}
+      <Link to="/" style={{ textDecoration:"none", display:"flex", alignItems:"center" }}>
+        <img src={LOGO_SRC} alt="SiS2 Beauty" style={{ height:50, width:"auto", objectFit:"contain", mixBlendMode:"screen" }} />
+      </Link>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  ENTRY 2: Book with specific staff
+//  HOME — all stylists
+// ═══════════════════════════════════════════════════════════════
+export function BookingHome() {
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStaff().then(s => setStaff(s.filter(x => x.status==="Active" && x.accepts_bookings))).finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, color:T.text, paddingBottom:60 }}>
+      <GlobalStyles />
+      <SiteHeader />
+
+      <div style={{ padding:"44px 24px 0", textAlign:"center", animation:"fadeUp .6s both" }}>
+        <p style={{ fontSize:10, color:G, fontWeight:700, letterSpacing:5, textTransform:"uppercase", marginBottom:18 }}>Welcome to</p>
+        <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"clamp(44px,10vw,72px)", fontWeight:600, color:T.text, lineHeight:.9, letterSpacing:"-1px" }}>
+          SiS<span style={{ color:G }}>2</span><br/>
+          <span style={{ fontWeight:400, fontStyle:"italic", fontSize:"0.74em" }}>Beauty</span>
+        </h1>
+        <div style={{ width:50, height:1, background:`linear-gradient(90deg,transparent,${G},transparent)`, margin:"26px auto" }} />
+        <p style={{ fontSize:13, color:T.muted, lineHeight:1.7, maxWidth:280, margin:"0 auto" }}>
+          Luxury beauty studio.<br/>Choose your specialist to begin.
+        </p>
+      </div>
+
+      <div style={{ padding:"36px 20px", display:"flex", flexDirection:"column", gap:12 }}>
+        {loading ? <div style={{ textAlign:"center", padding:60 }}><Spinner /></div> :
+          staff.map((s,i) => (
+            <Link key={s.id} to={`/${s.slug}`} style={{ textDecoration:"none" }}>
+              <Card style={{ padding:"20px 22px", display:"flex", alignItems:"center", gap:18, transition:"all .2s", animation:`fadeUp .5s ${i*.1}s both` }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor=G; e.currentTarget.style.transform="translateY(-2px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor=T.border; e.currentTarget.style.transform=""; }}>
+                <Avatar name={s.name} photoUrl={s.photo_url} size={64} color={s.color} />
+                <div style={{ flex:1 }}>
+                  <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:21, fontWeight:600, color:T.text, letterSpacing:.2, lineHeight:1 }}>{s.name}</p>
+                  <p style={{ fontSize:9, color:G, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", marginTop:5 }}>{s.role}</p>
+                  <p style={{ fontSize:12, color:T.muted, marginTop:7, lineHeight:1.5 }}>{s.bio}</p>
+                </div>
+                <span style={{ color:G, fontSize:22, opacity:.6 }}>›</span>
+              </Card>
+            </Link>
+          ))
+        }
+      </div>
+
+      <div style={{ textAlign:"center", padding:"10px 0 40px" }}>
+        <div style={{ width:40, height:1, background:`linear-gradient(90deg,transparent,${G},transparent)`, margin:"0 auto 14px" }} />
+        <p style={{ fontSize:9, color:T.muted, letterSpacing:3, textTransform:"uppercase" }}>sis<span style={{ color:G }}>2</span>.beauty</p>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STAFF BOOKING
 // ═══════════════════════════════════════════════════════════════
 export function StaffBooking() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [t, dark, setDark] = useTheme();
 
   const [staff, setStaff] = useState(null);
   const [services, setServices] = useState([]);
@@ -87,13 +102,11 @@ export function StaffBooking() {
   const [appts, setAppts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [step, setStep] = useState(1);
-  const [selService, setSelService] = useState(null);
-  const [selDate, setSelDate] = useState(null);
-  const [selTime, setSelTime] = useState(null);
+  const [sel, setSel] = useState({ service:null, date:null, time:null });
   const [info, setInfo] = useState({ name:"", phone:"", email:"", notes:"" });
   const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -102,92 +115,102 @@ export function StaffBooking() {
         if (!s) { setError("Stylist not found"); return; }
         setStaff(s);
         const [svc, avail, off, ap] = await Promise.all([
-          fetchStaffServices(s.id),
-          fetchAvailability(s.id),
-          fetchTimeOff(s.id),
-          fetchAppointments(),
+          fetchStaffServices(s.id), fetchAvailability(s.id), fetchTimeOff(s.id), fetchAppointments(),
         ]);
         setServices(svc); setAvailability(avail); setTimeOff(off); setAppts(ap);
-      } catch (e) { setError(e.message); }
+      } catch(e) { setError(e.message); }
       finally { setLoading(false); }
     })();
   }, [slug]);
 
-  const availableSlots = (selDate && selService)
-    ? getAvailableSlots({ date: selDate, staffId: staff?.id, duration: selService.duration_min, availability, appts, timeOff })
+  const slots = sel.date && sel.service
+    ? getAvailableSlots({ date:sel.date, staffId:staff?.id, duration:sel.service.duration_min, availability, appts, timeOff })
     : [];
 
   const submit = async () => {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await addAppointment({
+      const created = await addAppointment({
         staff_id: staff.id, staff_name: staff.name,
-        service_id: selService.id, service: selService.name,
+        service_id: sel.service.id, service: sel.service.name,
         client_name: info.name, client_phone: info.phone, client_email: info.email,
-        date: selDate, time: selTime, duration_min: selService.duration_min,
-        price: selService.price, status: "Pending",
+        date: sel.date, time: sel.time, duration_min: sel.service.duration_min,
+        price: sel.service.price, status:"Pending",
         notes: info.notes ? `Online booking · ${info.notes}` : "Online booking",
       });
-      setStep(5);
-    } catch (e) { setError(e.message); }
+      // Send confirmation email
+      await callEmailServer("booking-received", {
+        clientName: info.name, clientEmail: info.email,
+        staffName: staff.name, staffEmail: staff.email,
+        service: sel.service.name, date: sel.date, time: sel.time, price: sel.service.price,
+      });
+      setDone(true);
+    } catch(e) { setError(e.message); }
     finally { setSubmitting(false); }
   };
 
   const reset = () => {
-    setStep(1); setSelService(null); setSelDate(null); setSelTime(null); setInfo({ name:"", phone:"", email:"", notes:"" });
+    setStep(1); setSel({service:null,date:null,time:null});
+    setInfo({name:"",phone:"",email:"",notes:""}); setDone(false);
     fetchAppointments().then(setAppts);
   };
 
-  if (loading) return <CenteredLoader t={t} />;
-  if (error || !staff) return <CenteredError t={t} message={error || "Stylist not found"} onBack={() => navigate("/")} />;
+  if (loading) return <div style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center" }}><GlobalStyles /><Spinner /></div>;
+  if (error || !staff) return (
+    <div style={{ minHeight:"100vh", background:T.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16, padding:24 }}>
+      <GlobalStyles />
+      <p style={{ fontSize:18, color:T.text, fontFamily:"'Cormorant Garamond',serif" }}>{error || "Stylist not found"}</p>
+      <GoldBtn variant="secondary" onClick={() => navigate("/")}>← All Stylists</GoldBtn>
+    </div>
+  );
 
   return (
-    <div style={{ minHeight:"100vh", background:t.bg, color:t.text, paddingBottom:60, ...buildCssVars(t) }}>
-      <GlobalStyles t={t} />
+    <div style={{ minHeight:"100vh", background:T.bg, color:T.text, paddingBottom:60 }}>
+      <GlobalStyles />
+      <SiteHeader back />
 
-      <Header t={t} dark={dark} setDark={setDark} subtitle={`Book with ${staff.name}`} backTo="/" />
-
-      {/* Stylist hero */}
-      {step < 5 && (
-        <div style={{ padding:"24px 20px 0", display:"flex", alignItems:"center", gap:14 }}>
-          <Avatar name={staff.name} photoUrl={staff.photo_url} size={64} color={staff.color} />
-          <div>
-            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:600, color:t.text, letterSpacing:.3 }}>{staff.name}</p>
-            <p style={{ fontSize:11, color:BRAND.gold, marginTop:3, letterSpacing:1.5, textTransform:"uppercase", fontWeight:600 }}>{staff.role}</p>
+      {/* Stylist info */}
+      {!done && (
+        <div style={{ padding:"20px 20px 16px", display:"flex", alignItems:"center", gap:14, borderBottom:`1px solid ${T.border}`, animation:"fadeUp .3s both" }}>
+          <Avatar name={staff.name} photoUrl={staff.photo_url} size={56} color={staff.color} />
+          <div style={{ flex:1 }}>
+            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:600, color:T.text }}>{staff.name}</p>
+            <p style={{ fontSize:9, color:G, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", marginTop:4 }}>{staff.role}</p>
           </div>
+          <GoldBtn variant="secondary" onClick={() => navigate("/")} style={{ padding:"6px 12px", fontSize:10 }}>← All</GoldBtn>
         </div>
       )}
 
       {/* Progress */}
-      {step < 5 && (
-        <div style={{ padding:"24px 20px 0" }}>
+      {!done && (
+        <div style={{ padding:"16px 20px 0" }}>
           <div style={{ display:"flex", gap:6, marginBottom:8 }}>
-            {[1,2,3].map(n => (
-              <div key={n} style={{ flex:1, height:3, borderRadius:2, background: step >= n ? PRIMARY_GRADIENT : t.border }} />
-            ))}
+            {[1,2,3].map(n => <div key={n} style={{ flex:1, height:2, borderRadius:1, background:step>=n?GRAD:T.border, transition:"background .3s" }} />)}
           </div>
-          <p style={{ fontSize:10, color:t.muted, fontWeight:600, textTransform:"uppercase", letterSpacing:1.5 }}>Step {step} of 3</p>
+          <p style={{ fontSize:9, color:T.muted, letterSpacing:2, textTransform:"uppercase" }}>Step {step} of 3</p>
         </div>
       )}
 
       <div style={{ padding:"24px 20px" }}>
-        {step === 1 && (
-          <div style={{ animation:"slideUp .3s" }}>
-            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:600, color:t.text, marginBottom:6, letterSpacing:.3 }}>Choose a service</h2>
-            <p style={{ fontSize:13, color:t.muted, marginBottom:24, lineHeight:1.5 }}>What can {staff.name.split(" ")[0]} do for you today?</p>
-            {services.length === 0 ? (
-              <Card style={{ padding:30, textAlign:"center" }}><p style={{ color:t.muted }}>No services available yet.</p></Card>
-            ) : (
+        {/* STEP 1 */}
+        {!done && step===1 && (
+          <div style={{ animation:"fadeUp .3s both" }}>
+            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:600, marginBottom:6 }}>Choose a service</h2>
+            <p style={{ fontSize:12, color:T.muted, marginBottom:22 }}>What can {staff.name.split(" ")[0]} do for you?</p>
+            {services.length===0 ? <Card style={{ padding:30, textAlign:"center" }}><p style={{ color:T.muted }}>No services available yet.</p></Card> : (
               <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
                 {services.map(s => (
-                  <Card key={s.id} onClick={() => { setSelService(s); setStep(2); }} style={{ padding:"18px 20px", display:"flex", justifyContent:"space-between", alignItems:"center", transition:"all .2s" }}>
+                  <Card key={s.id} onClick={() => { setSel(p=>({...p,service:s})); setStep(2); }}
+                    style={{ padding:"18px 20px", display:"flex", justifyContent:"space-between", alignItems:"center", transition:"border-color .2s" }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor=G}
+                    onMouseLeave={e => e.currentTarget.style.borderColor=T.border}>
                     <div>
-                      <p style={{ fontSize:16, fontWeight:600, color:t.text, fontFamily:"'Cormorant Garamond',serif", letterSpacing:.2 }}>{s.name}</p>
-                      <p style={{ fontSize:11, color:t.muted, marginTop:4, display:"flex", alignItems:"center", gap:5, letterSpacing:.5 }}>{Ic.clock} {s.duration_min} min</p>
-                      {s.description && <p style={{ fontSize:11, color:t.muted, marginTop:6, lineHeight:1.4 }}>{s.description}</p>}
+                      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, fontWeight:600, color:T.text }}>{s.name}</p>
+                      {s.description && <p style={{ fontSize:11, color:T.muted, marginTop:4 }}>{s.description}</p>}
+                      <p style={{ fontSize:10, color:G+"90", marginTop:5 }}>⏱ {s.duration_min} min</p>
                     </div>
-                    <p style={{ fontSize:20, fontWeight:600, color:BRAND.gold, fontFamily:"'Cormorant Garamond',serif" }}>${s.price}</p>
+                    <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:600, color:G, flexShrink:0, marginLeft:12 }}>${s.price}</p>
                   </Card>
                 ))}
               </div>
@@ -195,154 +218,116 @@ export function StaffBooking() {
           </div>
         )}
 
-        {step === 2 && (
-          <div style={{ animation:"slideUp .3s" }}>
-            <button onClick={() => setStep(1)} style={{ display:"flex", alignItems:"center", gap:4, border:"none", background:"transparent", color:t.muted, fontSize:12, cursor:"pointer", marginBottom:16, letterSpacing:.5, textTransform:"uppercase" }}>{Ic.back} Back</button>
-            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:600, color:t.text, marginBottom:6, letterSpacing:.3 }}>Pick a date & time</h2>
-            <p style={{ fontSize:13, color:t.muted, marginBottom:20 }}>{selService.name} · {selService.duration_min} min</p>
+        {/* STEP 2 */}
+        {!done && step===2 && (
+          <div style={{ animation:"fadeUp .3s both" }}>
+            <button onClick={() => setStep(1)} style={{ border:"none", background:"transparent", color:T.muted, fontSize:10, cursor:"pointer", letterSpacing:1.5, textTransform:"uppercase", marginBottom:16 }}>‹ Back</button>
+            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:600, marginBottom:6 }}>Pick a date</h2>
+            <p style={{ fontSize:12, color:T.muted, marginBottom:20 }}>{sel.service?.name} · {sel.service?.duration_min} min</p>
 
-            <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:8, marginBottom:20 }}>
+            <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:10, marginBottom:22 }}>
               {getNextDays().map(d => {
-                const isSel = selDate === d.date;
+                const isSel = sel.date===d.date;
                 return (
-                  <button key={d.date} onClick={() => { setSelDate(d.date); setSelTime(null); }}
-                    style={{ flexShrink:0, display:"flex", flexDirection:"column", alignItems:"center", padding:"10px 14px", borderRadius:11, border:`1px solid ${isSel?BRAND.gold:t.border}`, background:isSel?PRIMARY_GRADIENT:t.card, color:isSel?"#0a0a0d":t.text, cursor:"pointer", minWidth:60 }}>
-                    <span style={{ fontSize:10, fontWeight:600, opacity:.85, textTransform:"uppercase", letterSpacing:.8 }}>{d.day}</span>
-                    <span style={{ fontSize:22, fontWeight:600, marginTop:2, fontFamily:"'Cormorant Garamond',serif" }}>{d.num}</span>
-                    <span style={{ fontSize:10, opacity:.75, letterSpacing:.5 }}>{d.month}</span>
-                    {d.isToday && <span style={{ fontSize:8, marginTop:2, color:isSel?"#0a0a0d":BRAND.gold, fontWeight:700, letterSpacing:1 }}>TODAY</span>}
+                  <button key={d.date} onClick={() => setSel(p=>({...p,date:d.date,time:null}))}
+                    style={{ flexShrink:0, display:"flex", flexDirection:"column", alignItems:"center", padding:"10px 14px", borderRadius:12, border:`1px solid ${isSel?G:T.border}`, background:isSel?GRAD:T.card, color:isSel?"#0a0a0d":T.text, cursor:"pointer", minWidth:58 }}>
+                    <span style={{ fontSize:9, fontWeight:700, letterSpacing:1, textTransform:"uppercase", opacity:.85 }}>{d.day}</span>
+                    <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:600, marginTop:3, lineHeight:1 }}>{d.num}</span>
+                    <span style={{ fontSize:10, opacity:.7, marginTop:2 }}>{d.mon}</span>
+                    {d.isToday && <span style={{ fontSize:8, marginTop:4, color:isSel?"#0a0a0d":G, fontWeight:700 }}>TODAY</span>}
                   </button>
                 );
               })}
             </div>
 
-            {selDate ? (
-              availableSlots.length === 0 ? (
+            {sel.date ? (
+              slots.length===0 ? (
                 <Card style={{ padding:30, textAlign:"center" }}>
-                  <p style={{ fontSize:32, marginBottom:8 }}>✦</p>
-                  <p style={{ fontSize:13, color:t.muted, lineHeight:1.5 }}>No available times this day.<br/>Please select another.</p>
+                  <p style={{ fontSize:28, marginBottom:8, color:G }}>✦</p>
+                  <p style={{ fontSize:13, color:T.muted, lineHeight:1.5 }}>Fully booked this day.<br/>Please choose another.</p>
                 </Card>
               ) : (
                 <>
-                  <p style={{ fontSize:10, color:t.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:1.5, marginBottom:12 }}>Available Times</p>
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(80px, 1fr))", gap:8 }}>
-                    {availableSlots.map(slot => {
-                      const isSel = selTime === slot;
+                  <p style={{ fontSize:9, color:G, fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:12 }}>Available Times</p>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(78px,1fr))", gap:8 }}>
+                    {slots.map(slot => {
+                      const isSel = sel.time===slot;
                       return (
-                        <button key={slot} onClick={() => setSelTime(slot)}
-                          style={{ padding:"12px 0", borderRadius:9, border:`1px solid ${isSel?BRAND.gold:t.border}`, background:isSel?PRIMARY_GRADIENT:t.card, color:isSel?"#0a0a0d":t.text, fontSize:14, fontWeight:600, cursor:"pointer", letterSpacing:.5 }}>
+                        <button key={slot} onClick={() => setSel(p=>({...p,time:slot}))}
+                          style={{ padding:"11px 0", borderRadius:9, border:`1px solid ${isSel?G:T.border}`, background:isSel?GRAD:T.card, color:isSel?"#0a0a0d":T.text, fontSize:14, fontWeight:600, cursor:"pointer" }}>
                           {slot}
                         </button>
                       );
                     })}
                   </div>
-                  {selTime && (
-                    <Button onClick={() => setStep(3)} style={{ marginTop:24, width:"100%", padding:"15px" }}>Continue</Button>
-                  )}
+                  {sel.time && <GoldBtn onClick={() => setStep(3)} style={{ marginTop:24, width:"100%", padding:"15px" }}>Continue</GoldBtn>}
                 </>
               )
-            ) : (
-              <p style={{ color:t.muted, fontSize:13, textAlign:"center", padding:20 }}>Select a date above</p>
-            )}
+            ) : <p style={{ color:T.muted, fontSize:12, textAlign:"center", padding:24 }}>Select a date to see availability</p>}
           </div>
         )}
 
-        {step === 3 && (
-          <div style={{ animation:"slideUp .3s" }}>
-            <button onClick={() => setStep(2)} style={{ display:"flex", alignItems:"center", gap:4, border:"none", background:"transparent", color:t.muted, fontSize:12, cursor:"pointer", marginBottom:16, letterSpacing:.5, textTransform:"uppercase" }}>{Ic.back} Back</button>
-            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:600, color:t.text, marginBottom:6, letterSpacing:.3 }}>Your details</h2>
-            <p style={{ fontSize:13, color:t.muted, marginBottom:22 }}>So we can confirm your booking.</p>
+        {/* STEP 3 */}
+        {!done && step===3 && (
+          <div style={{ animation:"fadeUp .3s both" }}>
+            <button onClick={() => setStep(2)} style={{ border:"none", background:"transparent", color:T.muted, fontSize:10, cursor:"pointer", letterSpacing:1.5, textTransform:"uppercase", marginBottom:16 }}>‹ Back</button>
+            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:600, marginBottom:6 }}>Your details</h2>
+            <p style={{ fontSize:12, color:T.muted, marginBottom:22 }}>So we can confirm your booking</p>
 
-            <Card style={{ padding:"18px 20px", marginBottom:22, borderColor:`${BRAND.gold}30` }}>
-              <p style={{ fontSize:10, color:BRAND.gold, fontWeight:700, textTransform:"uppercase", letterSpacing:1.5, marginBottom:14 }}>Booking Summary</p>
-              {[["Stylist", staff.name],["Service", selService.name],["Date", selDate],["Time", selTime]].map(([k,v]) => (
-                <div key={k} style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
-                  <span style={{ fontSize:12, color:t.muted, letterSpacing:.5 }}>{k}</span>
-                  <span style={{ fontSize:13, fontWeight:600 }}>{v}</span>
+            <Card style={{ padding:"16px 18px", marginBottom:22, borderColor:`${G}30` }}>
+              <p style={{ fontSize:9, color:G, fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:12 }}>Booking Summary</p>
+              {[["Stylist",staff.name],["Service",sel.service?.name],["Date",sel.date],["Time",sel.time]].map(([k,v]) => (
+                <div key={k} style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <span style={{ fontSize:11, color:T.muted }}>{k}</span>
+                  <span style={{ fontSize:12, fontWeight:600 }}>{v}</span>
                 </div>
               ))}
-              <div style={{ display:"flex", justifyContent:"space-between", marginTop:12, paddingTop:12, borderTop:`1px solid ${BRAND.gold}30` }}>
-                <span style={{ fontSize:12, color:t.muted, fontWeight:600, letterSpacing:.5, textTransform:"uppercase" }}>Total</span>
-                <span style={{ fontSize:20, fontWeight:600, color:BRAND.gold, fontFamily:"'Cormorant Garamond',serif" }}>${selService.price}</span>
+              <div style={{ display:"flex", justifyContent:"space-between", marginTop:10, paddingTop:10, borderTop:`1px solid ${G}20` }}>
+                <span style={{ fontSize:11, color:T.muted, textTransform:"uppercase", fontWeight:600, letterSpacing:.5 }}>Total</span>
+                <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:600, color:G }}>${sel.service?.price}</span>
               </div>
-              <p style={{ fontSize:10, color:t.muted, marginTop:10, textAlign:"center", letterSpacing:.5 }}>Payment in person at the salon</p>
+              <p style={{ fontSize:10, color:T.muted, textAlign:"center", marginTop:10 }}>Payment in person at the salon</p>
             </Card>
 
             <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-              <Input label="Full Name *" value={info.name} onChange={e => setInfo(p => ({...p,name:e.target.value}))} placeholder="Jane Smith" />
-              <Input label="Phone *" type="tel" value={info.phone} onChange={e => setInfo(p => ({...p,phone:e.target.value}))} placeholder="555-0000" />
-              <Input label="Email *" type="email" value={info.email} onChange={e => setInfo(p => ({...p,email:e.target.value}))} placeholder="jane@example.com" />
-              <Textarea label="Notes (optional)" rows={3} value={info.notes} onChange={e => setInfo(p => ({...p,notes:e.target.value}))} placeholder="Any preferences or allergies?" />
-              <Button onClick={submit} disabled={!info.name || !info.phone || !info.email || submitting}
-                style={{ marginTop:6, padding:"16px", opacity:(!info.name||!info.phone||!info.email||submitting)?.5:1, cursor:(!info.name||!info.phone||!info.email||submitting)?"not-allowed":"pointer" }}>
+              <Input label="Full Name *" value={info.name} onChange={e=>setInfo(p=>({...p,name:e.target.value}))} placeholder="Jane Smith" />
+              <Input label="Phone *" type="tel" value={info.phone} onChange={e=>setInfo(p=>({...p,phone:e.target.value}))} placeholder="555-0000" />
+              <Input label="Email *" type="email" value={info.email} onChange={e=>setInfo(p=>({...p,email:e.target.value}))} placeholder="jane@example.com" />
+              <Textarea label="Notes (optional)" rows={3} value={info.notes} onChange={e=>setInfo(p=>({...p,notes:e.target.value}))} placeholder="Any preferences…" />
+              <GoldBtn onClick={submit} disabled={!info.name||!info.phone||!info.email||submitting}
+                style={{ marginTop:6, padding:"16px", opacity:(!info.name||!info.phone||!info.email||submitting)?.4:1 }}>
                 {submitting ? "Booking…" : "Request Appointment"}
-              </Button>
-              <p style={{ fontSize:10, color:t.muted, textAlign:"center", letterSpacing:.5 }}>We'll confirm by email within a few hours.</p>
+              </GoldBtn>
+              <p style={{ fontSize:10, color:T.muted, textAlign:"center" }}>You'll receive a confirmation email shortly</p>
             </div>
           </div>
         )}
 
-        {step === 5 && (
-          <div style={{ textAlign:"center", padding:"40px 0", animation:"slideUp .4s" }}>
-            <div style={{ width:80, height:80, margin:"0 auto 24px", borderRadius:"50%", background:PRIMARY_GRADIENT, display:"flex", alignItems:"center", justifyContent:"center", color:"#0a0a0d", animation:"pop .5s" }}>
-              {Ic.checkBig}
+        {/* SUCCESS */}
+        {done && (
+          <div style={{ textAlign:"center", paddingTop:30, animation:"popIn .5s both" }}>
+            <div style={{ width:76, height:76, margin:"0 auto 22px", borderRadius:"50%", background:GRAD, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <svg width="34" height="34" fill="none" stroke="#0a0a0d" strokeWidth="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
             </div>
-            <p style={{ fontSize:11, color:BRAND.gold, fontWeight:600, letterSpacing:3, textTransform:"uppercase", marginBottom:10 }}>Confirmed</p>
-            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:32, fontWeight:600, color:t.text, marginBottom:14, letterSpacing:.3 }}>Request sent</h2>
-            <p style={{ fontSize:14, color:t.muted, marginBottom:30, lineHeight:1.6 }}>
-              Thank you, <strong style={{ color:t.text }}>{info.name}</strong>!<br/>
-              We'll send a confirmation to <strong style={{ color:t.text }}>{info.email}</strong> shortly.
+            <p style={{ fontSize:9, color:G, letterSpacing:4, textTransform:"uppercase", marginBottom:10, fontWeight:700 }}>Request Sent</p>
+            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:30, fontWeight:600, color:T.text, marginBottom:14 }}>We'll be in touch!</h2>
+            <p style={{ fontSize:13, color:T.muted, lineHeight:1.7, marginBottom:28 }}>
+              Thank you, <strong style={{ color:T.text }}>{info.name}</strong>!<br/>
+              A confirmation email has been sent to <strong style={{ color:T.text }}>{info.email}</strong>.
             </p>
-            <Card style={{ padding:"20px", textAlign:"left", marginBottom:24, borderColor:`${BRAND.gold}30` }}>
-              <p style={{ fontSize:10, color:BRAND.gold, fontWeight:700, textTransform:"uppercase", letterSpacing:1.5, marginBottom:14 }}>Booking Summary</p>
-              <p style={{ fontSize:16, fontWeight:600, marginBottom:4, fontFamily:"'Cormorant Garamond',serif" }}>{selService.name}</p>
-              <p style={{ fontSize:12, color:t.muted, marginBottom:14, letterSpacing:.5 }}>with {staff.name}</p>
-              <p style={{ fontSize:14 }}>📅 {selDate}</p>
-              <p style={{ fontSize:14, marginTop:5 }}>🕒 {selTime}</p>
+            <Card style={{ padding:"16px 18px", textAlign:"left", marginBottom:24, borderColor:`${G}30` }}>
+              <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, fontWeight:600, marginBottom:4 }}>{sel.service?.name}</p>
+              <p style={{ fontSize:12, color:T.muted, marginBottom:12 }}>with {staff.name}</p>
+              <p style={{ fontSize:13 }}>📅 {sel.date}</p>
+              <p style={{ fontSize:13, marginTop:4 }}>🕒 {sel.time}</p>
             </Card>
-            <Button variant="secondary" onClick={reset}>Book another appointment</Button>
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              <GoldBtn onClick={reset}>Book Another</GoldBtn>
+              <GoldBtn variant="secondary" onClick={() => navigate("/")}>← All Stylists</GoldBtn>
+            </div>
           </div>
         )}
       </div>
-
-      <Footer t={t} />
-    </div>
-  );
-}
-
-// ─── Reusable header ────────────────────────────────────────────
-function Header({ t, dark, setDark, subtitle, backTo }) {
-  return (
-    <div style={{ padding:"20px 20px 0", display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:`1px solid ${BRAND.gold}15`, paddingBottom:18 }}>
-      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        {backTo && <Link to={backTo} style={{ color:t.muted, display:"flex", marginRight:4 }}>{Ic.back}</Link>}
-        <Logo size={40} t={t} />
-      </div>
-      <button onClick={() => setDark(d=>!d)} style={{ padding:"7px 12px", borderRadius:20, border:`1px solid ${t.border}`, background:t.card, color:t.muted, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center" }}>
-        {dark ? Ic.sun : Ic.moon}
-      </button>
-    </div>
-  );
-}
-
-function Footer({ t }) {
-  return (
-    <div style={{ padding:"40px 20px 20px", textAlign:"center", marginTop:40 }}>
-      <div style={{ width:40, height:1, background:`linear-gradient(90deg, transparent, ${BRAND.gold}, transparent)`, margin:"0 auto 16px" }} />
-      <p style={{ fontSize:11, color:t.muted, letterSpacing:2, textTransform:"uppercase" }}>SiS<span style={{ color:BRAND.gold }}>2</span> Beauty</p>
-    </div>
-  );
-}
-
-function CenteredLoader({ t }) {
-  return <div style={{ minHeight:"100vh", background:t.bg, display:"flex", alignItems:"center", justifyContent:"center" }}><Spinner /></div>;
-}
-function CenteredError({ t, message, onBack }) {
-  return (
-    <div style={{ minHeight:"100vh", background:t.bg, color:t.text, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20, ...buildCssVars(t) }}>
-      <p style={{ fontSize:48, marginBottom:16, color:BRAND.gold }}>✦</p>
-      <p style={{ fontSize:18, fontWeight:600, marginBottom:16, fontFamily:"'Cormorant Garamond',serif" }}>{message}</p>
-      <Button variant="secondary" onClick={onBack}>← Back to home</Button>
     </div>
   );
 }
