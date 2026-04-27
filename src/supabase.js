@@ -1,13 +1,29 @@
-// ─────────────────────────────────────────────
-//  Supabase Client + API helpers
-// ─────────────────────────────────────────────
-
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL      = "https://kwifvvjugnpmjrrtcgjt.supabase.co"; // ← replace
-const SUPABASE_ANON_KEY = "sb_publishable_uKp38_41MyKjuBOVYPWWpg_QnIlHYY9";              // ← replace
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co"; // ← replace
+const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";              // ← replace
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── AUTH ──────────────────────────────────────────────────────
+export async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
+export async function getSession() {
+  const { data } = await supabase.auth.getSession();
+  return data.session;
+}
+export async function getStaffByUserId(userId) {
+  const { data, error } = await supabase.from("staff").select("*").eq("user_id", userId).single();
+  if (error) return null;
+  return data;
+}
 
 // ── STAFF ─────────────────────────────────────────────────────
 export async function fetchStaff() {
@@ -17,6 +33,21 @@ export async function fetchStaff() {
 export async function fetchStaffBySlug(slug) {
   const { data, error } = await supabase.from("staff").select("*").eq("slug", slug).single();
   if (error) throw error; return data;
+}
+export async function updateStaff(id, updates) {
+  const { data, error } = await supabase.from("staff").update(updates).eq("id", id).select();
+  if (error) throw error; return data[0];
+}
+
+// ── PHOTO UPLOAD ──────────────────────────────────────────────
+export async function uploadStaffPhoto(staffId, file) {
+  const ext = file.name.split(".").pop();
+  const path = `staff/${staffId}.${ext}`;
+  const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+  if (upErr) throw upErr;
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  await updateStaff(staffId, { photo_url: data.publicUrl });
+  return data.publicUrl;
 }
 
 // ── SERVICES ──────────────────────────────────────────────────
@@ -36,28 +67,15 @@ export async function deleteService(id) {
   const { error } = await supabase.from("services").update({ active: false }).eq("id", id);
   if (error) throw error;
 }
-
-// Get services a specific staff offers (joined with their custom price)
 export async function fetchStaffServices(staffId) {
-  const { data, error } = await supabase
-    .from("staff_services")
-    .select("*, services(*)")
-    .eq("staff_id", staffId);
+  const { data, error } = await supabase.from("staff_services").select("*, services(*)").eq("staff_id", staffId);
   if (error) throw error;
-  return data.map(row => ({
-    ...row.services,
-    price:        row.price ?? row.services.default_price,
-    duration_min: row.duration_min ?? row.services.duration_min,
-    staff_service_id: row.id,
-  }));
+  return data.map(r => ({ ...r.services, price: r.price ?? r.services.default_price, duration_min: r.duration_min ?? r.services.duration_min, staff_service_id: r.id }));
 }
 export async function setStaffServices(staffId, serviceIds) {
-  // Delete existing
   await supabase.from("staff_services").delete().eq("staff_id", staffId);
-  // Insert new
-  if (serviceIds.length === 0) return;
-  const rows = serviceIds.map(sid => ({ staff_id: staffId, service_id: sid }));
-  const { error } = await supabase.from("staff_services").insert(rows);
+  if (!serviceIds.length) return;
+  const { error } = await supabase.from("staff_services").insert(serviceIds.map(sid => ({ staff_id: staffId, service_id: sid })));
   if (error) throw error;
 }
 
@@ -67,15 +85,11 @@ export async function fetchAvailability(staffId) {
   if (error) throw error; return data;
 }
 export async function setAvailability(staffId, schedule) {
-  // schedule = [{ day_of_week, start_time, end_time }, ...]
   await supabase.from("staff_availability").delete().eq("staff_id", staffId);
-  if (schedule.length === 0) return;
-  const rows = schedule.map(s => ({ staff_id: staffId, ...s }));
-  const { error } = await supabase.from("staff_availability").insert(rows);
+  if (!schedule.length) return;
+  const { error } = await supabase.from("staff_availability").insert(schedule.map(s => ({ staff_id: staffId, ...s })));
   if (error) throw error;
 }
-
-// ── TIME OFF ──────────────────────────────────────────────────
 export async function fetchTimeOff(staffId) {
   const { data, error } = await supabase.from("staff_time_off").select("*").eq("staff_id", staffId).order("start_date");
   if (error) throw error; return data;
