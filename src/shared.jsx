@@ -187,6 +187,14 @@ export function GlobalStyles() {
 }
 
 // Call email server helper
-await fetch("https://kwifvvjugnpmjrrtcgjt.supabase.co/functions/v1/send-email", {
-  method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ type: endpoint, appt: data })
-});
+export async function callEmailServer(endpoint, data) {
+  try {
+    await fetch("https://kwifvvjugnpmjrrtcgjt.supabase.co/functions/v1/send-email", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ type: endpoint, appt: data })
+    });
+  } catch(e) {
+    console.log("Email error:", e.message);
+  }
+}
