@@ -12,10 +12,11 @@ import {
   uploadStaffPhoto, updateStaff,
 } from "./supabase";
 import {
-  T, GRAD, LOGO_SRC, Avatar, Badge, Card, GoldBtn, Input, Modal, Spinner,
+  T, GRAD, LOGO_SRC, BRAND, Avatar, Badge, Card, GoldBtn, Input, Modal, Spinner,
   GlobalStyles, DAYS, getNextDays,
 } from "./shared";
 
+const G = BRAND.gold;
 const today = new Date().toISOString().slice(0,10);
 
 export default function StaffDashboard({ staffProfile, onSignOut }) {
