@@ -51,7 +51,7 @@ function AppRouter() {
 
       {/* Staff dashboard — requires login */}
       <Route path="/staff" element={
-          : !session
+          !session
             ? <Navigate to="/login" replace />
             : staffProfile
               ? <StaffDashboard
