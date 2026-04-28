@@ -95,6 +95,10 @@ export default function AdminApp() {
           style={{ padding:"6px 12px", borderRadius:18, border:`1px solid ${T.border}`, background:"transparent", color:T.muted, fontSize:10, cursor:"pointer", letterSpacing:.8, textTransform:"uppercase" }}>
           Sign Out
         </button>
+        <button onClick={() => window.location.href = "/staff"}
+          style={{padding:"6px 12px", borderRadius:18, border:`1px solid ${T.border}`, background:"transparent", color:T.muted, fontSize:10, cursor:"pointer", letterSpacing:.8, textTransform:"uppercase"}}>
+          My Dashboard
+        </button>
       </div>
 
       {/* Content */}
