@@ -65,6 +65,12 @@ export default function StaffDashboard({ staffProfile, onSignOut }) {
         <button onClick={onSignOut} style={{ padding:"6px 12px", borderRadius:18, border:`1px solid ${T.border}`, background:"transparent", color:T.muted, fontSize:10, cursor:"pointer", letterSpacing:.8, textTransform:"uppercase" }}>
           Sign Out
         </button>
+        {staffProfile?.is_admin && (
+          <button onClick={() => window.location.href = "/admin"}
+            style={{padding:"6px 12px", borderRadius:18, border:`1px solid ${G}40`, background:`${G}15`, color:G, fontSize:10, cursor:"pointer", letterSpacing:.8, textTransform:"uppercase", fontWeight:700}}>
+            Admin Panel
+          </button>
+        )}
       </div>
 
       {/* Content */}
