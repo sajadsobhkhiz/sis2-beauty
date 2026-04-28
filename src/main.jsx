@@ -51,14 +51,16 @@ function AppRouter() {
 
       {/* Staff dashboard — requires login */}
       <Route path="/staff" element={
-        !session
-          ? <Navigate to="/login" replace />
-          : staffProfile
-            ? <StaffDashboard
-                staffProfile={staffProfile}
-                onSignOut={async () => { await signOut(); window.location.reload(); }}
-              />
-            : (
+        loading
+          ? <div style={{minHeight:"100vh",background:"#0a0a0d"}}/>
+          : !session
+            ? <Navigate to="/login" replace />
+            : staffProfile
+              ? <StaffDashboard
+                  staffProfile={staffProfile}
+                  onSignOut={async () => { await signOut(); window.location.reload(); }}
+                />
+              : (
               <div style={{ minHeight:"100vh", background:"#0a0a0d", display:"flex", alignItems:"center", justifyContent:"center", color:"#d4af37", flexDirection:"column", gap:16 }}>
                 <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22 }}>No staff profile found.</p>
                 <p style={{ fontSize:13, color:"#6b6050" }}>Ask your admin to link your account in the Staff table.</p>
