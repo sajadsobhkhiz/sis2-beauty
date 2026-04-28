@@ -193,7 +193,7 @@ export async function callEmailServer(endpoint, data) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer sb_publishable_uKp38_41MyKjuBOVYPWWpg_QnIIHYY9",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3aWZ2dmp1Z25wbWpycnRjZ2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDE2MTMsImV4cCI6MjA5Mjg3NzYxM30.eHuETeXP6OjOmNoL44CVCFoGE3LeNvtRu6xt0jIHxzw",
       },
       body: JSON.stringify({ type: endpoint, appt: data }),
     });
