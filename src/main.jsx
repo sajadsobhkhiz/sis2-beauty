@@ -51,8 +51,6 @@ function AppRouter() {
 
       {/* Staff dashboard — requires login */}
       <Route path="/staff" element={
-        loading
-          ? <div style={{minHeight:"100vh",background:"#0a0a0d"}}/>
           : !session
             ? <Navigate to="/login" replace />
             : staffProfile
