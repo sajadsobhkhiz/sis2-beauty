@@ -58,7 +58,9 @@ export default function AdminApp() {
       const st = staff.find(s => s.name===appt.staff_name);
       await callEmailServer("booking-confirmed", {
         clientName: appt.client_name, clientEmail: appt.client_email,
+        clientPhone: appt.client_phone,
         staffName: appt.staff_name, staffEmail: st?.email,
+        adminEmail: "sareh.md1990@gmail.com",
         service: appt.service, date: appt.date,
         time: appt.time?.slice(0,5), price: appt.price,
       });
