@@ -34,10 +34,7 @@ function AppRouter() {
       <Route path="/login" element={
         session
           ? <Navigate to={isAdmin ? "/admin" : "/staff"} replace />
-          : <LoginPage onLogin={async () => {
-              await new Promise(r => setTimeout(r, 500));
-              window.location.reload();
-            }} />
+          : <LoginPage onLogin={() => window.location.reload()} />
       } />
 
       {/* Admin dashboard — requires admin role */}
