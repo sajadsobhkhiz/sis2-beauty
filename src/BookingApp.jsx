@@ -28,6 +28,9 @@ function SiteHeader({ back }) {
       <Link to="/" style={{ textDecoration:"none", display:"flex", alignItems:"center" }}>
         <img src={LOGO_SRC} alt="SiS2 Beauty" style={{ height:50, width:"auto", objectFit:"contain", mixBlendMode:"screen" }} />
       </Link>
+      <Link to="/login" style={{padding:"6px 14px", borderRadius:18, border:`1px solid ${G}40`, background:"transparent", color:G, fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase", textDecoration:"none", marginLeft:"auto"}}>
+        Login
+      </Link>
     </div>
   );
 }
