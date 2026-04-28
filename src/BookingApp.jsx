@@ -142,8 +142,10 @@ export function StaffBooking() {
       // Send confirmation email
       await callEmailServer("booking-received", {
         clientName: info.name, clientEmail: info.email,
+        clientPhone: info.phone,
         staffName: staff.name, staffEmail: staff.email,
-        service: sel.service.name, date: sel.date, time: sel.time, price: sel.service.price,
+        service: sel.service.name, date: sel.date, 
+        time: sel.time, price: sel.service.price,
       });
       setDone(true);
     } catch(e) { setError(e.message); }
