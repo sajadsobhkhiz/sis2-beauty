@@ -108,8 +108,8 @@ export function GoldBtn({ children, style={}, disabled, onClick, variant="primar
 
 export function Modal({ title, onClose, children }) {
   return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.75)", display:"flex", alignItems:"flex-end", justifyContent:"center", zIndex:9999, backdropFilter:"blur(8px)" }} onClick={onClose}>
-      <div style={{ background:T.card, borderRadius:"20px 20px 0 0", padding:"28px 24px 100px", width:"100%", maxWidth:540, border:`1px solid ${T.border}`, maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999, backdropFilter:"blur(8px)" }} onClick={onClose}>
+      <div style={{ background:T.card, borderRadius:16,  padding:"28px 24px", width:"90%", maxWidth:480, border:`1px solid ${T.border}`, maxHeight:"85vh", overflowY:"auto" }}>
         <div style={{ width:40, height:4, borderRadius:2, background:"#d4af3760", margin:"0 auto 24px" }} />
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}>
           <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:T.text }}>{title}</h2>
